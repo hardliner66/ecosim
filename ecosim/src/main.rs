@@ -106,10 +106,11 @@ fn main() -> anyhow::Result<()> {
         "Event economy population after 10 steps: {}",
         economy.population
     );
-    economy.simulate_with_events(10, &[EconomyEvent::Births(3), EconomyEvent::Deaths(16)])?;
     println!(
-        "Event economy population after 10 steps: {}",
-        economy.population
+        "Error after simulating with excessive deaths: {}",
+        economy
+            .simulate_with_events(10, &[EconomyEvent::Births(3), EconomyEvent::Deaths(16)])
+            .unwrap_err()
     );
     Ok(())
 }
