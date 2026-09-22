@@ -1,0 +1,5 @@
+/target
+/main
+# debug info on macOS
+*.dSYM
+.rdb.history
