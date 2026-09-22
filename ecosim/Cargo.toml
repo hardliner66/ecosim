@@ -8,4 +8,4 @@ repository.workspace = true
 
 [dependencies]
 anyhow = "1.0.104"
-ecosim-traits = { version = "0.1.0", path = "../ecosim-traits" }
+ecosim-traits = { version = "0.2.0", path = "../ecosim-traits" }
