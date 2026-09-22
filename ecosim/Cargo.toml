@@ -7,5 +7,5 @@ license-file.workspace = true
 repository.workspace = true
 
 [dependencies]
-anyhow = "1.0.104"
+anyhow.workspace = true
 ecosim-traits = { version = "0.2.0", path = "../ecosim-traits" }

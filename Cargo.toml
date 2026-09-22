@@ -8,3 +8,6 @@ version = "0.2.0"
 edition = "2024"
 license-file = "LICENSE"
 repository = "https://github.com/hardliner66/ecosim"
+
+[workspace.dependencies]
+anyhow = "1.0.104"
