@@ -1,7 +1,10 @@
 [package]
 name = "ecosim-traits"
+description = "Ecosim traits"
 version.workspace = true
 edition.workspace = true
+license-file.workspace = true
+repository.workspace = true
 
 [dependencies]
 thiserror = "2.0.20"

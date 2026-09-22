@@ -1,8 +1,10 @@
 [workspace]
 resolver = "3"
-members = ["ecosim","ecosim-traits"]
+members = ["ecosim", "ecosim-traits"]
 default-members = ["ecosim"]
 
 [workspace.package]
 version = "0.1.0"
 edition = "2024"
+license-file = "LICENSE"
+repository = "https://github.com/hardliner66/ecosim"

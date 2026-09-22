@@ -1,7 +1,10 @@
 [package]
 name = "ecosim"
+description = "Economy simulation"
 version.workspace = true
 edition.workspace = true
+license-file.workspace = true
+repository.workspace = true
 
 [dependencies]
 anyhow = "1.0.104"
