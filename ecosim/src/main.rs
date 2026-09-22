@@ -3,7 +3,7 @@ use std::collections::{HashMap, HashSet};
 use clap::Parser;
 use ecosim_traits::Simulation;
 use rand::rngs::StdRng;
-use rand::{RngExt, SeedableRng};
+use rand::{Rng, RngExt, SeedableRng};
 use thiserror::Error;
 use tracing::{debug, info};
 use uuid::Uuid;
@@ -14,10 +14,13 @@ const FARMER_STOCK_RANGE: std::ops::RangeInclusive<u32> = 60..=140;
 const FARMER_SELL_PRICE_RANGE: std::ops::RangeInclusive<u32> = 6..=10;
 const BAKER_CASH_RANGE: std::ops::RangeInclusive<u64> = 800..=1_200;
 const BAKER_BUY_PRICE_RANGE: std::ops::RangeInclusive<u32> = 10..=14;
+const ORDER_QUANTITY_RANGE: std::ops::RangeInclusive<u32> = 1..=8;
 
 #[derive(Parser, Debug)]
 struct Cli {
-    #[arg(short, long)]
+    #[arg(short, long, default_value_t = 20)]
+    steps: usize,
+    #[arg(long)]
     seed: Option<u64>,
 }
 
@@ -70,6 +73,7 @@ struct Participant {
 }
 
 struct Market {
+    rng: Box<dyn Rng>,
     participants: HashMap<Uuid, Participant>,
     buy_orders: Vec<Order>,
     sell_orders: Vec<Order>,
@@ -79,10 +83,10 @@ struct Market {
 impl Market {
     /// Generates buy/sell orders for each participant based on their stock levels
     /// and price expectations. Buyers bid when low on stock, sellers offer when flush.
-    fn generate_orders(&self, _step: usize) -> Vec<MarketEvent> {
+    /// Order quantities are randomized via `rng` for more varied market activity.
+    fn generate_orders(&mut self, _step: usize) -> Vec<MarketEvent> {
         const LOW_STOCK_THRESHOLD: u32 = 10;
         const HIGH_STOCK_THRESHOLD: u32 = 20;
-        const ORDER_QUANTITY: u32 = 5;
 
         let mut events = Vec::new();
         for (&participant_id, participant) in &self.participants {
@@ -94,7 +98,7 @@ impl Market {
                         events.push(MarketEvent::Buy(Order {
                             participant_id,
                             commodity: commodity.clone(),
-                            quantity: ORDER_QUANTITY,
+                            quantity: self.rng.random_range(ORDER_QUANTITY_RANGE),
                             price,
                         }));
                     }
@@ -105,7 +109,7 @@ impl Market {
                         events.push(MarketEvent::Sell(Order {
                             participant_id,
                             commodity,
-                            quantity: ORDER_QUANTITY,
+                            quantity: self.rng.random_range(ORDER_QUANTITY_RANGE),
                             price,
                         }));
                     }
@@ -211,7 +215,7 @@ impl Market {
                 }
             }
 
-            info!(
+            debug!(
                 ?commodity,
                 ?buyer_id,
                 ?seller_id,
@@ -381,7 +385,7 @@ impl Simulation for Market {
     /// in `tick`. Only malformed input (unknown participant, duplicate join, zero
     /// quantity) is rejected here.
     fn handle(&mut self, event: &Self::Event) -> Result<(), Self::EventError> {
-        info!("Handling event: {:?}", event);
+        debug!("Handling event: {:?}", event);
         match event {
             MarketEvent::Buy(order) | MarketEvent::Sell(order) => {
                 if order.quantity == 0 {
@@ -424,7 +428,7 @@ impl Simulation for Market {
             .map(|o| o.commodity.clone())
             .collect();
 
-        info!(
+        debug!(
             buy_orders = self.buy_orders.len(),
             sell_orders = self.sell_orders.len(),
             "Ticking market with {} commodities in play",
@@ -467,10 +471,10 @@ fn main() -> anyhow::Result<()> {
         )
         .init();
 
-    let Cli { seed } = Cli::parse();
+    let Cli { seed, steps } = Cli::parse();
 
     let seed = seed.unwrap_or_else(|| rand::rng().random());
-    info!(seed, "Seeding RNG (pass --seed to reproduce this run)");
+    info!("Seeding RNG (pass '--seed {seed}' to reproduce this run)");
     let mut rng = StdRng::seed_from_u64(seed);
 
     let mut participants = HashMap::new();
@@ -519,6 +523,7 @@ fn main() -> anyhow::Result<()> {
     let departing_farmer_id = farmer_ids[rng.random_range(0..farmer_ids.len())];
 
     let mut market = Market {
+        rng: Box::new(rng),
         participants,
         buy_orders: Vec::new(),
         sell_orders: Vec::new(),
@@ -529,7 +534,7 @@ fn main() -> anyhow::Result<()> {
 
     info!("Starting market simulation");
     market
-        .simulate_with_fn(20, |m, step| {
+        .simulate_with_fn(steps, |m, step| {
             let mut events = m.generate_orders(step);
             if step == 5 {
                 events.push(MarketEvent::Join {
