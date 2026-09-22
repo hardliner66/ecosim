@@ -13,6 +13,13 @@ name = "ecosim"
 version = "0.1.0"
 dependencies = [
  "anyhow",
+ "ecosim-traits",
+]
+
+[[package]]
+name = "ecosim-traits"
+version = "0.1.0"
+dependencies = [
  "thiserror",
 ]
 

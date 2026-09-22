@@ -1,6 +1,6 @@
 [workspace]
 resolver = "3"
-members = ["ecosim"]
+members = ["ecosim","ecosim-traits"]
 default-members = ["ecosim"]
 
 [workspace.package]
